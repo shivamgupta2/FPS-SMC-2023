@@ -12,14 +12,16 @@ import numpy as np
 from piq import psnr, ssim
 from piq.perceptual import LPIPS
 
+from torchvision import models
 from guided_diffusion.condition_methods import get_conditioning_method
 from guided_diffusion.measurements import get_noise, get_operator
 from guided_diffusion.unet import create_model
 from guided_diffusion.gaussian_diffusion import create_sampler
 from guided_diffusion.svd_replacement import Deblurring, Deblurring2D
 from data.dataloader import get_dataset, get_dataloader
-from util.img_utils import clear_color, mask_generator, _transform, Blurkernel
+from util.img_utils import clear_color, mask_generator, Blurkernel
 from util.logger import get_logger
+
 
 
 def load_yaml(file_path: str) -> dict:
@@ -105,6 +107,7 @@ def main():
         fnames = [str(j).zfill(5) + '.png' for j in range(i * batch_size, (i+1) * batch_size)]
         ref_img = ref_img.to(device)
 
+
         if measure_config['operator'] ['name'] == 'inpainting':
             # Masks only exist in the inpainting tasks.
             mask = mask_gen(ref_img)
@@ -155,6 +158,8 @@ def main():
         # If you wish to record the intermediate steps, turn record = True below.
         x_start = torch.randn(ref_img.shape, device=device).requires_grad_()
         sample = sample_fn(x_start=x_start, measurement=y_n, record=False, save_root=out_path).requires_grad_()
+
+
         
         for _ in range(batch_size):
             plt.imsave(os.path.join(out_path, 'input', fnames[_]), clear_color(y_n[_,:,:,:].unsqueeze(dim=0)))
